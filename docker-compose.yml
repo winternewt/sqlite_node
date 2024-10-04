@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  sqlite:
+    image: sqlite-db:0.1
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./database:/db
+    container_name: sqlite
+
+  sqlitebrowser:
+    image: linuxserver/sqlitebrowser
+    ports:
+      - "3000:3000"
+    depends_on:
+      - sqlite
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - ENABLE_UWSGI=true
+    volumes:
+      - ./database:/data/db
+    container_name: sqlite-browser
+
