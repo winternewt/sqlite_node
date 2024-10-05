@@ -1,27 +1,32 @@
 version: '3'
 
 services:
-  sqlite:
-    image: sqlite-db:0.1
+  sqlite-node:
+    image: sqlite-node:0.1
     build: 
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "0.0.0.0:38000:8000"
     volumes:
-      - ./database:/db
-    container_name: sqlite
+      - ./database:/app/db
+    container_name: sqlite-node
+    command: ["--host","0.0.0.0","--port","8000"]
 
-  sqlitebrowser:
+  sqlite-browser:
     image: linuxserver/sqlitebrowser
     ports:
-      - "3000:3000"
+      - "0.0.0.0:33000:3000"
+      - "0.0.0.0:33001:3001"
     depends_on:
-      - sqlite
+      - sqlite-node
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=UTC
       - ENABLE_UWSGI=true
     volumes:
-      - ./database:/data/db
+      - ./database:/config/db
     container_name: sqlite-browser
+  #  command: ["sqlitebrowser","/config/db/db.sqlite","--table","csv_data"]
 

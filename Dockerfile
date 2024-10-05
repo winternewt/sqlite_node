@@ -1,23 +1,31 @@
-# Use the latest alpine image
-FROM alpine:latest
-# Install SQLite, Python, and pip
-RUN apk --no-cache add sqlite python3 py3-pip
-# Install Python libraries (pandas)
-RUN pip install pandas
+# Use Python 3.11 Alpine image
+FROM python:3.11-alpine
+
+# Install SQLite
+RUN apk --no-cache add sqlite
+
 # Create a directory to store the database
-RUN mkdir -p /db/data
-# Set working directory to /db
-WORKDIR /db
-# Copy your SQLite database file into the container
-COPY data/initial-db.sqlite /db/db.sqlite
-# Copy the CSV and the Python script into the container
-COPY data/database.csv /db/data/database.csv
-COPY convert_csv.py /db/populate_db.py
-# Run the Python script to populate the SQLite database
-RUN python3 /db/populate_db.py || true
-# Conditionally copy the newly populated initial-db.sqlite if it exists
-RUN [ -f /db/data/initial-db.sqlite ] && cp /db/data/initial-db.sqlite /db/db.sqlite || true
-# Expose the port if needed
-#EXPOSE 1433
-# Command to run when the container starts
-CMD ["sqlite3", "/db/db.sqlite"]
+RUN mkdir -p /app/data
+
+# Set working directory to /app
+WORKDIR /app
+
+# Copy requirements file and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code into the container
+COPY *.py .
+
+# Copy the CSV into the container
+COPY data/database.csv /app/data/database.csv
+
+# Copy the entrypoint script and make it executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Expose the port for Uvicorn
+EXPOSE 8000
+
+# Set the entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]

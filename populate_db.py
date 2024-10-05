@@ -1,16 +1,26 @@
 import pandas as pd
 import sqlite3
 
-# Load the CSV file
+# Paths
 csv_file_path = 'data/database.csv'
+db_file_path = 'data/db.sqlite'
 
 try:
-    # Attempt to load the CSV file with safe load using error_bad_lines=False to skip problematic lines
+    # Load the CSV file
     df = pd.read_csv(csv_file_path, on_bad_lines='skip')
     print(f"CSV loaded successfully. DataFrame shape: {df.shape}")
 
+    # Remove columns that are entirely NaN
+    df.dropna(axis=1, how='all', inplace=True)
+
+    # Alternatively, remove columns where all values are NaN or empty strings
+    # df.replace('', pd.NA, inplace=True)
+    # df.dropna(axis=1, how='all', inplace=True)
+
+    print(f"DataFrame shape after dropping empty columns: {df.shape}")
+
     # Connect to the SQLite database (overwrite existing file)
-    conn = sqlite3.connect('data/initial-db.sqlite')
+    conn = sqlite3.connect(db_file_path)
 
     # Save DataFrame to SQLite database
     df.to_sql('csv_data', conn, if_exists='replace', index=False)
